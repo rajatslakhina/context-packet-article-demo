@@ -2,7 +2,7 @@
 
 **Context engineering for a reviewer agent, written as a compiler.** Give it a modular iOS repository, a diff, the tools your agent harness exposes and a token budget. It returns the exact packet a reviewer subagent should see, a manifest you can diff in a PR, and which seeded findings that packet has the evidence for.
 
-Article: (added after publish)
+Article: [Context Engineering for Code Review: Your Agent Doesn't Need More Code. It Needs the Callers.](https://medium.com/@er.rajatlakhina/context-engineering-for-code-review-your-agent-doesnt-need-more-code-it-needs-the-callers-7e2dab1bd6b1) (Medium)
 
 ![The demo app on an iPhone Simulator: the review-contract packet uses 10,870 of 32,000 tokens and has the evidence for 5 of 5 seeded findings](Demo/Screenshots/contract-32k.png)
 
@@ -12,7 +12,7 @@ On a constructed 8-module monorepo and a constructed diff (a required `retry:` p
 
 | Strategy | Budget | Tokens used | Findings with evidence in the window |
 |---|---|---|---|
-| Whole modules (all files of touched modules, one 9,000-token `CLAUDE.md`, all 38 tools) | 32,000 | 31,700, of which **0 tokens of source files** | 1 of 5 |
+| Whole modules (all files of touched modules, one 9,000-token `CLAUDE.md`, all 38 tools offered; 33 fit) | 32,000 | 31,700, of which **0 tokens of source files** | 1 of 5 |
 | Diff only (diff, the same `CLAUDE.md`, all tools) | 32,000 | 31,700 | 1 of 5 |
 | Whole modules, budget raised | 200,000 | 77,460 | 2 of 5 |
 | **Review contract** | 32,000 | **10,870** | **5 of 5** |
