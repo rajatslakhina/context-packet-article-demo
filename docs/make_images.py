@@ -32,7 +32,7 @@ im.save(P+"header.png")
 # ---------- diagram 1400x940: what fills the window
 im=Image.new("RGB",(1400,940),BG); d=ImageDraw.Draw(im)
 d.text((60,40),"What fills a reviewer agent's window",font=f("DejaVuSans-Bold.ttf",40),fill=FG)
-d.text((60,96),"Same diff, same repo, four packets. Right column: seeded findings whose evidence made it in.",font=f("DejaVuSans.ttf",22),fill=MUTED)
+d.text((60,96),"Same diff, same repo, four packets. Grey track = budget. Right: seeded findings whose evidence made it in.",font=f("DejaVuSans.ttf",22),fill=MUTED)
 rows=[
  ("Whole modules","32,000 budget",[("diff",2000),("rules",9000),("tool",20700)],31700,"1 / 5","0 tokens of source: tools and one big CLAUDE.md filled it"),
  ("Diff only","32,000 budget",[("diff",2000),("rules",9000),("tool",20700)],31700,"1 / 5","same picture without the ambition"),
@@ -47,11 +47,19 @@ for name,bud,parts,total,cov,note in rows:
     ok=cov.startswith("5")
     w=d.textlength(cov,font=f("DejaVuSans-Bold.ttf",34)); d.text((1310-w,y+14),cov,font=f("DejaVuSans-Bold.ttf",34),fill=GREEN if ok else RED)
     x=90; yy=y+66
-    rr(d,(90,yy,90+1000,yy+30),(33,39,54),None,6)
+    bnum=int(bud.split()[0].replace(",",""))
+    track=min(int(bnum*s),1000)
+    rr(d,(90,yy,90+track,yy+30),(33,39,54),None,6)
+    if bnum*s<=1000:
+        d.line((90+track,yy-8,90+track,yy+38),fill=FG,width=3)
+        d.text((90+track+8,yy-26),"budget",font=f("DejaVuSans.ttf",16),fill=MUTED)
+    else:
+        d.text((90+1000-150,yy-26),"budget 200,000 →",font=f("DejaVuSans.ttf",16),fill=MUTED)
     for k,v in parts:
         ww=int(v*s)
         if ww>0: d.rectangle((x,yy,x+ww,yy+30),fill=C[k]); x+=ww
-    d.text((x+12,yy+4),f"{total:,}",font=f("DejaVuSansMono-Bold.ttf",20),fill=FG)
+    lx=max(x,90+track)+16 if bnum*s<=1000 else x+12
+    d.text((lx,yy+4),f"{total:,}",font=f("DejaVuSansMono-Bold.ttf",20),fill=FG)
     d.text((90,y+108),note,font=f("DejaVuSans.ttf",20),fill=MUTED)
     y+=170
 # legend
@@ -84,29 +92,30 @@ im.save(P+"eviction.png")
 # ---------- code card 1400x900 (LinkedIn)
 im=Image.new("RGB",(1400,900),BG); d=ImageDraw.Draw(im)
 d.text((60,40),"The reviewer's packet is a build step",font=f("DejaVuSans-Bold.ttf",40),fill=FG)
-d.text((60,98),"ContextPacket, Compiler.swift (abridged): what the review contract selects, in order",font=f("DejaVuSans.ttf",22),fill=MUTED)
-rr(d,(60,150,1340,620),(22,26,36),LINE,14)
+d.text((60,98),"ContextPacket, Compiler.swift (simplified): what the review contract selects, in order",font=f("DejaVuSans.ttf",22),fill=MUTED)
+rr(d,(60,150,1340,660),(22,26,36),LINE,14)
 mono=f("DejaVuSansMono.ttf",24)
 KW=(198,120,221); TY=(97,175,239); CM=(110,120,140); ST=FG; GR=C["callSite"]
 lines=[
  [("case ",KW),(".contract",ST),(":",ST)],
  [("    // root + the modules this diff touches, not one 9,000-token CLAUDE.md",CM)],
- [("    let ",KW),("rules = repo.scopedRules.filter { touches($0) }",ST)],
+ [("    let ",KW),("rules = repo.scopedRules.filter { !$0.covers.isDisjoint(with: touched) }",ST)],
  [("",ST)],
  [("    // interfaces the diff uses from other modules",CM)],
  [("    let ",KW),("evidence = interfaceItems(repo: repo, changed: changed)",ST)],
  [("    // reverse edges: who calls what this diff changed",CM)],
  [("        + ",ST),("callSiteItems",GR),("(repo: repo, diff: diff)",ST)],
  [("",ST)],
- [("    // evidence before tools: a tight budget drops tools, not callers",CM)],
+ [("    // evidence before tools (read/search/review only): a tight budget",CM)],
+ [("    // drops tools, not callers",CM)],
  [("    return ",KW),("rules + evidence + reviewTools",ST)],
 ]
 for i,segs in enumerate(lines):
     x=95; y=172+i*38
     for t,c in segs: d.text((x,y),t,font=mono,fill=c); x+=d.textlength(t,font=mono)
-d.text((60,650),"Constructed iOS monorepo, one diff, five seeded findings:",font=f("DejaVuSans.ttf",26),fill=FG)
-d.text((60,700),"whole modules, 77,460 tokens  →  evidence for 2 of 5",font=f("DejaVuSansMono-Bold.ttf",26),fill=RED)
-d.text((60,745),"review contract, 10,870 tokens  →  evidence for 5 of 5",font=f("DejaVuSansMono-Bold.ttf",26),fill=GREEN)
-d.text((60,820),"github.com/rajatslakhina/context-packet-article-demo",font=f("DejaVuSans.ttf",24),fill=MUTED)
+d.text((60,685),"Constructed iOS monorepo, one diff, five seeded findings:",font=f("DejaVuSans.ttf",26),fill=FG)
+d.text((60,730),"whole modules, 77,460 tokens  →  evidence for 2 of 5",font=f("DejaVuSansMono-Bold.ttf",26),fill=RED)
+d.text((60,772),"review contract, 10,870 tokens  →  evidence for 5 of 5",font=f("DejaVuSansMono-Bold.ttf",26),fill=GREEN)
+d.text((60,840),"github.com/rajatslakhina/context-packet-article-demo",font=f("DejaVuSans.ttf",24),fill=MUTED)
 im.save(P+"code-card.png")
 print("ok")
