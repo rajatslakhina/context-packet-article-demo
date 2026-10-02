@@ -16,7 +16,7 @@ On a constructed 8-module monorepo and a constructed diff (a required `retry:` p
 | Diff only (diff, the same `CLAUDE.md`, all tools) | 32,000 | 31,700 | 1 of 5 |
 | Whole modules, budget raised | 200,000 | 77,460 | 2 of 5 |
 | **Review contract** | 32,000 | **10,870** | **5 of 5** |
-| Review contract, tools packed first (my first draft) | 8,000 | 7,890 | 2 of 5 |
+| Review contract, tools packed first (my first draft) | 8,000 | 7,920 | 2 of 5 |
 | Review contract | 8,000 | 7,890 | 5 of 5 |
 
 Every number in this table is asserted by a test in `Tests/ContextPacketTests`.
@@ -25,13 +25,20 @@ Every number in this table is asserted by a test in `Tests/ContextPacketTests`.
 
 ## The contract
 
+Abridged from `Compiler.swift` (the real `case` also handles `.contractToolsFirst`):
+
 ```swift
 case .contract:
-    let rules = repo.scopedRules                      // root + touched modules only
+    let rules = repo.scopedRules                                   // root + touched modules only
         .filter { !$0.covers.isDisjoint(with: touchedModules.union([RuleFile.rootScope])) }
-    let evidence = interfaceItems(repo: repo, changed: changed)   // cross-module stubs
-        + callSiteItems(repo: repo, diff: diff)                    // reverse edges: who calls what changed
-    return rules + evidence + reviewTools                          // evidence before tools
+        .sorted { $0.path < $1.path }
+        .map(rulesItem)
+    let reviewTools = tools                                        // read/search/review, never write/deploy
+        .filter { !$0.purposes.isDisjoint(with: reviewerPurposes) && !$0.purposes.contains(.write) && !$0.purposes.contains(.deploy) }
+        .map(toolItem)
+    let evidence = interfaceItems(repo: repo, changed: changed)    // cross-module stubs
+        + callSiteItems(repo: repo, diff: diff)                     // reverse edges: who calls what changed
+    return rules + evidence + reviewTools                           // evidence before tools
 ```
 
 ```swift
@@ -74,8 +81,9 @@ Launch arguments (used by CI for screenshots): `-strategy wholeModules|diffOnly|
 
 ## Verification status
 
-- Library: `swift build -Xswiftc -warnings-as-errors` and the 14 XCTest cases pass on Swift 6.1.2 (Linux) and in CI on macOS.
-- Simulator: CI status pending (filled in after the first green run).
+- Library: `swift build -Xswiftc -warnings-as-errors` and the 14 XCTest cases pass on Swift 6.1.2 (Linux) and in CI on macOS (`swift test`).
+- Simulator: **yes, in GitHub Actions (`macos-15`), not on a local Mac.** The `demo-on-simulator` job builds `Demo.xcodeproj` with `xcodebuild`, installs it on an iPhone Simulator, launches it three times with the launch arguments above, checks the app process is still alive after 8 seconds, and commits the three screenshots above. Nobody tapped the UI by hand.
+- Local note: in the Linux sandbox the `swift test` CLI hung before running anything, so the built XCTest bundle was run directly there (14/14 pass). CI runs `swift test` on macOS, and that passes too.
 
 ## Sources
 
