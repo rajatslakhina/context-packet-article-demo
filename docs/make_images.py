@@ -93,13 +93,13 @@ im.save(P+"eviction.png")
 im=Image.new("RGB",(1400,900),BG); d=ImageDraw.Draw(im)
 d.text((60,40),"The reviewer's packet is a build step",font=f("DejaVuSans-Bold.ttf",40),fill=FG)
 d.text((60,98),"ContextPacket, Compiler.swift (simplified): what the review contract selects, in order",font=f("DejaVuSans.ttf",22),fill=MUTED)
-rr(d,(60,150,1340,660),(22,26,36),LINE,14)
+rr(d,(60,150,1340,698),(22,26,36),LINE,14)
 mono=f("DejaVuSansMono.ttf",24)
 KW=(198,120,221); TY=(97,175,239); CM=(110,120,140); ST=FG; GR=C["callSite"]
 lines=[
  [("case ",KW),(".contract",ST),(":",ST)],
  [("    // root + the modules this diff touches, not one 9,000-token CLAUDE.md",CM)],
- [("    let ",KW),("rules = repo.scopedRules.filter { !$0.covers.isDisjoint(with: touched) }",ST)],
+ [("    let ",KW),("rules = repo.scopedRules.filter { !$0.covers.isDisjoint(with: scopes) }",ST)],
  [("",ST)],
  [("    // interfaces the diff uses from other modules",CM)],
  [("    let ",KW),("evidence = interfaceItems(repo: repo, changed: changed)",ST)],
@@ -108,14 +108,15 @@ lines=[
  [("",ST)],
  [("    // evidence before tools (read/search/review only): a tight budget",CM)],
  [("    // drops tools, not callers",CM)],
+ [("    let ",KW),("reviewTools = tools.filter { $0.isReadOnlyReviewTool }",ST)],
  [("    return ",KW),("rules + evidence + reviewTools",ST)],
 ]
 for i,segs in enumerate(lines):
     x=95; y=172+i*38
     for t,c in segs: d.text((x,y),t,font=mono,fill=c); x+=d.textlength(t,font=mono)
-d.text((60,685),"Constructed iOS monorepo, one diff, five seeded findings:",font=f("DejaVuSans.ttf",26),fill=FG)
-d.text((60,730),"whole modules, 77,460 tokens  →  evidence for 2 of 5",font=f("DejaVuSansMono-Bold.ttf",26),fill=RED)
-d.text((60,772),"review contract, 10,870 tokens  →  evidence for 5 of 5",font=f("DejaVuSansMono-Bold.ttf",26),fill=GREEN)
-d.text((60,840),"github.com/rajatslakhina/context-packet-article-demo",font=f("DejaVuSans.ttf",24),fill=MUTED)
+d.text((60,715),"Constructed iOS monorepo, one diff, five seeded findings:",font=f("DejaVuSans.ttf",26),fill=FG)
+d.text((60,758),"whole modules, 77,460 tokens  →  evidence for 2 of 5",font=f("DejaVuSansMono-Bold.ttf",26),fill=RED)
+d.text((60,798),"review contract, 10,870 tokens  →  evidence for 5 of 5",font=f("DejaVuSansMono-Bold.ttf",26),fill=GREEN)
+d.text((60,852),"github.com/rajatslakhina/context-packet-article-demo",font=f("DejaVuSans.ttf",24),fill=MUTED)
 im.save(P+"code-card.png")
 print("ok")
