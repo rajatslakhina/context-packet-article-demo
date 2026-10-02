@@ -94,18 +94,28 @@ final class CoverageTests: XCTestCase {
     func testHeadlineNumbersAtDefaultBudget() throws {
         let contract = try compiler.compile(.contract, repo: S.repository, diff: S.diff, tools: S.tools, budget: 32_000)
         XCTAssertEqual(contract.usedTokens, 10_870)
+        XCTAssertEqual(contract.tokens(of: .rules), 1_700)
+        XCTAssertEqual(contract.tokens(of: .interface), 390)
+        XCTAssertEqual(contract.tokens(of: .callSite), 640)
+        XCTAssertEqual(contract.included.filter { $0.kind == .tool }.count, 12)
         XCTAssertEqual(try covered(.contract, 32_000), ["F1", "F2", "F3", "F4", "F5"])
 
         let whole = try compiler.compile(.wholeModules, repo: S.repository, diff: S.diff, tools: S.tools, budget: 32_000)
         XCTAssertEqual(whole.tokens(of: .file), 0, "tool schemas and the big CLAUDE.md fill the budget first")
         XCTAssertEqual(whole.tokens(of: .tool), 20_700)
+        XCTAssertEqual(whole.usedTokens, 31_700)
+        XCTAssertEqual(whole.included.filter { $0.kind == .tool }.count, 33, "33 of 38 tool schemas fit")
+        XCTAssertEqual(SampleMonorepo.tools.count, 38)
         XCTAssertEqual(try covered(.wholeModules, 32_000), ["F2"])
+        let diffOnly = try compiler.compile(.diffOnly, repo: S.repository, diff: S.diff, tools: S.tools, budget: 32_000)
+        XCTAssertEqual(diffOnly.usedTokens, 31_700)
         XCTAssertEqual(try covered(.diffOnly, 32_000), ["F2"])
     }
 
     func testMoreBudgetDoesNotFixSelection() throws {
         let whole = try compiler.compile(.wholeModules, repo: S.repository, diff: S.diff, tools: S.tools, budget: 200_000)
         XCTAssertEqual(whole.usedTokens, 77_460)
+        XCTAssertEqual(whole.tokens(of: .file), 43_100)
         XCTAssertTrue(whole.evicted.isEmpty)
         // Callers in FeatureProfile and FeatureOrders are never selected, at any budget.
         XCTAssertEqual(try covered(.wholeModules, 200_000), ["F2", "F5"])
@@ -113,6 +123,13 @@ final class CoverageTests: XCTestCase {
     }
 
     func testEvictionOrderDecidesTightBudgets() throws {
+        let fixed = try compiler.compile(.contract, repo: S.repository, diff: S.diff, tools: S.tools, budget: 8_000)
+        let draft = try compiler.compile(.contractToolsFirst, repo: S.repository, diff: S.diff, tools: S.tools, budget: 8_000)
+        XCTAssertEqual(fixed.usedTokens, 7_890)
+        XCTAssertEqual(draft.usedTokens, 7_920)
+        XCTAssertEqual(fixed.included.filter { $0.kind == .tool }.count, 6)
+        XCTAssertEqual(draft.included.filter { $0.kind == .tool }.count, 8)
+        XCTAssertTrue(draft.included.filter { $0.kind == .callSite }.isEmpty, "first draft evicts every caller")
         XCTAssertEqual(try covered(.contract, 8_000), ["F1", "F2", "F3", "F4", "F5"])
         XCTAssertEqual(try covered(.contractToolsFirst, 8_000), ["F2", "F4"])
         XCTAssertEqual(try covered(.contract, 6_000), ["F1", "F2", "F3", "F4", "F5"])
