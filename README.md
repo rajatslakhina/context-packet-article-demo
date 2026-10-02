@@ -88,6 +88,6 @@ Launch arguments (used by CI for screenshots): `-strategy wholeModules|diffOnly|
 ## Sources
 
 - Anthropic, [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
-- Martin Fowler / Thoughtworks, [Context Engineering for Coding Agents](https://martinfowler.com/articles/exploring-gen-ai/context-engineering-coding-agents.html)
+- Birgitta Böckeler on martinfowler.com, [Context Engineering for Coding Agents](https://martinfowler.com/articles/exploring-gen-ai/context-engineering-coding-agents.html)
 
 MIT licensed.
